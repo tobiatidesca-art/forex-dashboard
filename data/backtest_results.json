@@ -1,0 +1,137 @@
+{
+  "last_update": "2026-05-17 11:26 UTC",
+  "period_days": 504,
+  "commission_pct": 0.02,
+  "strategies": {
+    "ema": {
+      "EURUSD": {
+        "return_pct": 1.71,
+        "buy_hold_pct": 6.63,
+        "max_dd_pct": -7.27,
+        "n_trades": 8,
+        "win_rate": 37.5,
+        "sharpe": 0.12,
+        "profit_factor": 1.53
+      },
+      "GBPUSD": {
+        "return_pct": -0.03,
+        "buy_hold_pct": 4.33,
+        "max_dd_pct": -9.37,
+        "n_trades": 11,
+        "win_rate": 45.5,
+        "sharpe": -0.0,
+        "profit_factor": 1.23
+      },
+      "USDJPY": {
+        "return_pct": 3.47,
+        "buy_hold_pct": 1.7,
+        "max_dd_pct": -7.92,
+        "n_trades": 7,
+        "win_rate": 57.1,
+        "sharpe": 0.18,
+        "profit_factor": 1.77
+      },
+      "USDCHF": {
+        "return_pct": 8.47,
+        "buy_hold_pct": -11.68,
+        "max_dd_pct": -6.51,
+        "n_trades": 10,
+        "win_rate": 40.0,
+        "sharpe": 0.51,
+        "profit_factor": 2.62
+      },
+      "USDCAD": {
+        "return_pct": -1.64,
+        "buy_hold_pct": 0.53,
+        "max_dd_pct": -5.23,
+        "n_trades": 8,
+        "win_rate": 25.0,
+        "sharpe": -0.16,
+        "profit_factor": 0.86
+      },
+      "AUDUSD": {
+        "return_pct": -0.63,
+        "buy_hold_pct": 7.63,
+        "max_dd_pct": -9.92,
+        "n_trades": 11,
+        "win_rate": 18.2,
+        "sharpe": -0.03,
+        "profit_factor": 0.4
+      },
+      "NZDUSD": {
+        "return_pct": -8.68,
+        "buy_hold_pct": -5.42,
+        "max_dd_pct": -15.33,
+        "n_trades": 9,
+        "win_rate": 44.4,
+        "sharpe": -0.49,
+        "profit_factor": 0.51
+      }
+    },
+    "rsi": {
+      "EURUSD": {
+        "return_pct": -7.45,
+        "buy_hold_pct": 8.82,
+        "max_dd_pct": -12.62,
+        "n_trades": 3,
+        "win_rate": 33.3,
+        "sharpe": -0.51,
+        "profit_factor": 0.08
+      },
+      "GBPUSD": {
+        "return_pct": 5.93,
+        "buy_hold_pct": 5.06,
+        "max_dd_pct": -7.77,
+        "n_trades": 4,
+        "win_rate": 75.0,
+        "sharpe": 0.39,
+        "profit_factor": 3.27
+      },
+      "USDJPY": {
+        "return_pct": 6.68,
+        "buy_hold_pct": -0.71,
+        "max_dd_pct": -11.14,
+        "n_trades": 5,
+        "win_rate": 60.0,
+        "sharpe": 0.32,
+        "profit_factor": 1.45
+      },
+      "USDCHF": {
+        "return_pct": -0.91,
+        "buy_hold_pct": -12.0,
+        "max_dd_pct": -13.68,
+        "n_trades": 3,
+        "win_rate": 100.0,
+        "sharpe": -0.06,
+        "profit_factor": NaN
+      },
+      "USDCAD": {
+        "return_pct": 6.94,
+        "buy_hold_pct": 0.67,
+        "max_dd_pct": -6.94,
+        "n_trades": 6,
+        "win_rate": 83.3,
+        "sharpe": 0.6,
+        "profit_factor": 8.39
+      },
+      "AUDUSD": {
+        "return_pct": 15.74,
+        "buy_hold_pct": 7.49,
+        "max_dd_pct": -9.72,
+        "n_trades": 4,
+        "win_rate": 100.0,
+        "sharpe": 0.72,
+        "profit_factor": NaN
+      },
+      "NZDUSD": {
+        "return_pct": 24.62,
+        "buy_hold_pct": -4.58,
+        "max_dd_pct": -8.34,
+        "n_trades": 3,
+        "win_rate": 100.0,
+        "sharpe": 1.1,
+        "profit_factor": NaN
+      }
+    }
+  }
+}
