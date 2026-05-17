@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forex Major Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    /* ── Design tokens ─────────────────────────────────────────── */
+    :root {
+      --bg:          #07091a;
+      --card-bg:     #0c1024;
+      --card-b:      #182048;
+      --surface:     #111830;
+      --accent:      #00cfff;
+      --accent2:     #0088cc;
+      --green:       #00e87a;
+      --red:         #ff3f5a;
+      --yellow:      #ffc107;
+      --text:        #d8e2f5;
+      --sub:         #9bafd4;
+      --hover:       #14203a;
+      --radius:      10px;
+      --shadow:      0 4px 24px #00000055;
+    }
+
+    /* ── Reset & base ───────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      min-height: 100vh;
+      font-size: 14px;
+    }
+
+    /* ── Header ─────────────────────────────────────────────────── */
+    .header {
+      position: sticky; top: 0; z-index: 200;
+      background: #0c1024ee;
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--card-b);
+      padding: 14px 28px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px;
+    }
+
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+    }
+
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+
+    .logo h1 {
+      font-size: 1.15rem; font-weight: 800; letter-spacing: 1.5px;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, var(--accent), #88ddff);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header-right {
+      display: flex; align-items: center; gap: 14px;
+    }
+
+    .live-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+      animation: pulse-dot 2.5s ease-in-out infinite;
+    }
+    @keyframes pulse-dot { 0%,100%{opacity:1;} 50%{opacity:.25;} }
+
+    #lastUpdate {
+      color: var(--sub); font-size: .8rem;
+    }
+
+    .btn {
+      display: flex; align-items: center; gap: 6px;
+      border: 1px solid var(--accent); background: transparent;
+      color: var(--accent); font-size: .85rem; font-weight: 700;
+      padding: 7px 18px; border-radius: 6px; cursor: pointer;
+      transition: background .18s, box-shadow .18s;
+    }
+    .btn:hover { background: #00cfff18; box-shadow: 0 0 14px #00cfff30; }
+    .btn.loading { opacity: .55; pointer-events: none; }
+
+    .spin {
+      display: inline-block; width: 13px; height: 13px;
+      border: 2px solid var(--accent); border-top-color: transparent;
+      border-radius: 50%; animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Page container ─────────────────────────────────────────── */
+    .page { max-width: 1640px; margin: 0 auto; padding: 24px 28px; }
+
+    /* ── Section label ──────────────────────────────────────────── */
+    .section-label {
+      display: flex; align-items: center; gap: 10px;
+      font-size: .7rem; font-weight: 800; letter-spacing: 2.5px;
+      text-transform: uppercase; color: var(--sub);
+      margin-bottom: 14px;
+    }
+    .section-label::after {
+      content: ''; flex: 1; height: 1px; background: var(--card-b);
+    }
+
+    /* ── Cards grid ─────────────────────────────────────────────── */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-b);
+      border-radius: var(--radius);
+      padding: 16px 14px 12px;
+      cursor: pointer;
+      transition: border-color .18s, transform .18s, box-shadow .18s;
+      position: relative; overflow: hidden;
+    }
+    .card::after {
+      content: ''; position: absolute; inset: 0 0 auto 0;
+      height: 2px; background: var(--accent);
+      transform: scaleX(0); transform-origin: left;
+      transition: transform .2s;
+    }
+    .card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: var(--shadow); }
+    .card:hover::after { transform: scaleX(1); }
+    .card.active { border-color: var(--accent); }
+    .card.active::after { transform: scaleX(1); }
+
+    .card-label {
+      font-size: .68rem; font-weight: 800; letter-spacing: 1.2px;
+      color: var(--sub); text-transform: uppercase; margin-bottom: 5px;
+    }
+
+    .card-price {
+      font-size: 1.35rem; font-weight: 700;
+      font-family: 'Courier New', monospace; letter-spacing: .5px;
+      margin-bottom: 3px;
+    }
+
+    .card-change {
+      font-size: .88rem; font-weight: 700; margin-bottom: 7px;
+    }
+
+    .card-ohlc {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      font-size: .67rem; color: var(--sub); margin-bottom: 8px;
+    }
+
+    .card-badges {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .badge {
+      font-size: .65rem; font-weight: 700;
+      padding: 2px 7px; border-radius: 4px;
+    }
+
+    .badge-rsi  { border: 1px solid #ffffff22; background: #ffffff08; color: var(--sub); }
+    .badge-long    { border: 1px solid #00e87a44; background: #00e87a11; color: var(--green); }
+    .badge-short   { border: 1px solid #ff3f5a44; background: #ff3f5a11; color: var(--red); }
+    .badge-neutral { border: 1px solid #ffc10744; background: #ffc10711; color: var(--yellow); }
+
+    .spark-wrap {
+      position: relative;
+      height: 48px;
+      margin-top: 6px;
+      overflow: hidden;
+    }
+
+    .up  { color: var(--green); }
+    .dn  { color: var(--red); }
+    .neu { color: var(--yellow); }
+
+    /* ── Two-column layout for strength + detail ────────────────── */
+    .row2 {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    /* ── Panel (shared card style) ──────────────────────────────── */
+    .panel {
+      background: var(--card-bg);
+      border: 1px solid var(--card-b);
+      border-radius: var(--radius);
+      padding: 18px;
+    }
+
+    .panel-title {
+      font-size: .72rem; font-weight: 800; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--sub);
+      margin-bottom: 14px;
+    }
+
+    /* ── Strength chart ─────────────────────────────────────────── */
+    .strength-wrap { height: 240px; }
+
+    /* ── Detail chart tabs ──────────────────────────────────────── */
+    .tabs {
+      display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px;
+    }
+    .tab {
+      padding: 5px 13px; border-radius: 5px; font-size: .75rem; font-weight: 700;
+      cursor: pointer; border: 1px solid var(--card-b); background: none;
+      color: var(--sub); transition: all .15s;
+    }
+    .tab.active { background: var(--accent); color: #000; border-color: var(--accent); }
+    .tab:hover:not(.active) { border-color: var(--accent); color: var(--accent); }
+
+    .detail-wrap { height: 250px; }
+
+    /* ── Table ──────────────────────────────────────────────────── */
+    .table-panel {
+      background: var(--card-bg);
+      border: 1px solid var(--card-b);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 28px;
+      overflow-x: auto;
+    }
+
+    table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+
+    thead tr { border-bottom: 1px solid var(--card-b); }
+
+    th {
+      padding: 7px 12px;
+      text-align: right; white-space: nowrap;
+      color: var(--sub); font-size: .68rem; font-weight: 800;
+      letter-spacing: 1.2px; text-transform: uppercase;
+    }
+    th:first-child { text-align: left; }
+
+    td {
+      padding: 9px 12px; text-align: right;
+      font-family: 'Courier New', monospace;
+      border-bottom: 1px solid #0e1835;
+    }
+    td:first-child {
+      text-align: left; font-family: 'Segoe UI', Arial, sans-serif;
+      font-weight: 800; color: var(--accent); white-space: nowrap;
+    }
+    tr:hover td { background: var(--hover); }
+
+    /* ── Error banner ───────────────────────────────────────────── */
+    .error-banner {
+      display: none; margin-bottom: 18px;
+      background: #ff3f5a18; border: 1px solid var(--red);
+      color: var(--red); border-radius: 8px; padding: 14px 18px;
+      font-size: .88rem;
+    }
+
+    /* ── Loading overlay ────────────────────────────────────────── */
+    .overlay {
+      display: none; position: fixed; inset: 0;
+      background: #07091acc; z-index: 999;
+      flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+    }
+    .overlay.on { display: flex; }
+
+    .overlay .big-spin {
+      width: 52px; height: 52px;
+      border: 4px solid var(--accent); border-top-color: transparent;
+      border-radius: 50%; animation: spin .8s linear infinite;
+    }
+    .overlay p { color: var(--accent); font-size: 1rem; font-weight: 600; }
+
+    /* ── Responsive ─────────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .row2 { grid-template-columns: 1fr; }
+      .header { padding: 12px 16px; }
+      .page  { padding: 16px; }
+      .cards { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 500px) {
+      .cards { grid-template-columns: 1fr; }
+      .logo h1 { font-size: .95rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div class="overlay" id="overlay">
+  <div class="big-spin"></div>
+  <p>Caricamento dati...</p>
+</div>
+
+<!-- Header -->
+<header class="header">
+  <div class="logo">
+    <div class="logo-icon">📈</div>
+    <h1>Forex Major</h1>
+  </div>
+  <div class="header-right">
+    <div class="live-dot" id="liveDot"></div>
+    <span id="lastUpdate">—</span>
+    <button class="btn" id="btnRefresh" onclick="refresh()">
+      <span id="refreshIco">↻</span> Aggiorna
+    </button>
+  </div>
+</header>
+
+<!-- Page -->
+<div class="page">
+  <div class="error-banner" id="errBanner"></div>
+
+  <!-- ── Cards ── -->
+  <div class="section-label">Prezzi live · Daily</div>
+  <div class="cards" id="cardsGrid"></div>
+
+  <!-- ── Strength + Detail chart ── -->
+  <div class="row2">
+    <div class="panel">
+      <div class="panel-title">Currency Strength</div>
+      <div class="strength-wrap">
+        <canvas id="strengthChart"></canvas>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Grafico storico (60 sessioni)</div>
+      <div class="tabs" id="chartTabs"></div>
+      <div class="detail-wrap">
+        <canvas id="detailChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Indicators table ── -->
+  <div class="section-label">Indicatori tecnici</div>
+  <div class="table-panel">
+    <table>
+      <thead>
+        <tr>
+          <th>Cross</th>
+          <th>Ultimo</th>
+          <th>Apertura</th>
+          <th>H</th>
+          <th>L</th>
+          <th>Var %</th>
+          <th>RSI 14</th>
+          <th>SMA 20</th>
+          <th>SMA 50</th>
+          <th>SMA 200</th>
+          <th>ATR 14</th>
+          <th>Trend</th>
+        </tr>
+      </thead>
+      <tbody id="tBody"></tbody>
+    </table>
+  </div>
+
+  <!-- ── Strength History ── -->
+  <div class="section-label">Forza valutaria storica</div>
+  <div class="panel">
+    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+      <span style="font-size:.72rem; color:var(--sub);" id="strMeta">—</span>
+      <div class="tabs" id="strPeriodTabs">
+        <button class="tab"        onclick="setStrPeriod('1Y')">1A</button>
+        <button class="tab active" onclick="setStrPeriod('3Y')" id="strTab3Y">3A</button>
+        <button class="tab"        onclick="setStrPeriod('5Y')">5A</button>
+        <button class="tab"        onclick="setStrPeriod('10Y')">10A</button>
+        <button class="tab"        onclick="setStrPeriod('MAX')">Max</button>
+      </div>
+    </div>
+    <div style="position:relative; height:300px;">
+      <canvas id="strHistChart"></canvas>
+    </div>
+    <!-- Currency pills -->
+    <div style="margin-top:16px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+      <span style="font-size:.72rem; color:var(--sub);">Seleziona 2 valute per confrontarle:</span>
+      <div id="currPills" style="display:flex; gap:7px; flex-wrap:wrap;"></div>
+    </div>
+  </div>
+
+  <!-- ── Comparison panel (hidden until 2 currencies selected) ── -->
+  <div id="compPanel" style="display:none;">
+    <div class="section-label" id="compLabel">Confronto forza vs cross</div>
+    <div class="panel">
+      <div style="font-size:.72rem; color:var(--sub); margin-bottom:12px;" id="compInfo">—</div>
+      <!-- Forza delle due valute selezionate -->
+      <div style="position:relative; height:190px; margin-bottom:14px;">
+        <canvas id="compStrChart"></canvas>
+      </div>
+      <div style="height:1px; background:var(--card-b); margin-bottom:14px;"></div>
+      <!-- Prezzo storico del cross corrispondente -->
+      <div style="position:relative; height:190px;">
+        <canvas id="compPriceChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Signals ── -->
+  <div class="section-label">Segnali operativi · soglia ±15 punti</div>
+  <div class="table-panel">
+    <table>
+      <thead>
+        <tr>
+          <th>Cross</th>
+          <th style="text-align:left;">Valuta Base</th>
+          <th style="text-align:left;">Valuta Quote</th>
+          <th>Differenziale</th>
+          <th>Segnale attuale</th>
+          <th>Attivo dal</th>
+          <th>Ultimo ingresso</th>
+        </tr>
+      </thead>
+      <tbody id="signalsBody"></tbody>
+    </table>
+  </div>
+
+  <!-- ── Strength Backtest ── -->
+  <div class="section-label">Backtest · forza contrarian (mean reversion) · 2 anni</div>
+  <div class="panel">
+    <div style="position:relative; height:200px; margin-bottom:20px;">
+      <canvas id="strBtChart"></canvas>
+    </div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Cross</th>
+            <th>Return %</th>
+            <th>Buy &amp; Hold %</th>
+            <th>Max Drawdown</th>
+            <th># Trade</th>
+            <th>Win Rate</th>
+            <th>Sharpe</th>
+          </tr>
+        </thead>
+        <tbody id="strBtBody"></tbody>
+      </table>
+    </div>
+    <p style="margin-top:12px; font-size:.72rem; color:var(--sub);">
+      Contrarian: SHORT quando forza(base) &minus; forza(quote) &gt; 15 (attesa reversal) · LONG quando &lt; &minus;15 · Commissione 0.02% · Dati daily 2Y
+    </p>
+  </div>
+
+</div>
+
+<!-- ─────────────────────────────── JS ─────────────────────────────────── -->
+<script>
+/* ── Config ── */
+const DATA_URL = 'data/forex_latest.json';
+const AUTO_REFRESH_MS = 5 * 60 * 1000;   // auto-aggiorna ogni 5 min
+
+const NAMES = {
+  EURUSD:'EUR/USD', GBPUSD:'GBP/USD', USDJPY:'USD/JPY',
+  USDCHF:'USD/CHF', USDCAD:'USD/CAD', AUDUSD:'AUD/USD', NZDUSD:'NZD/USD'
+};
+
+/* ── State ── */
+let appData       = null;
+let selectedCross = 'EURUSD';
+let sparkCharts   = {};
+let strengthInst  = null;
+let detailInst    = null;
+
+/* ── Helpers ── */
+const $ = id => document.getElementById(id);
+
+function dec(k)   { return k === 'USDJPY' ? 3 : 5; }
+function fmt(v,d) { return v != null ? parseFloat(v).toFixed(d ?? dec(selectedCross)) : '—'; }
+
+function changeInfo(pct) {
+  if (pct == null) return { txt:'—', cls:'neu', arrow:'·' };
+  const up = pct > 0.01, dn = pct < -0.01;
+  return {
+    txt:   (up ? '+' : '') + pct.toFixed(4) + '%',
+    cls:   up ? 'up' : dn ? 'dn' : 'neu',
+    arrow: up ? '▲' : dn ? '▼' : '—',
+  };
+}
+
+function rsiColor(r) {
+  if (r == null) return 'var(--sub)';
+  return r > 70 ? 'var(--red)' : r < 30 ? 'var(--green)' : 'var(--sub)';
+}
+
+/* ── Render: cards ── */
+function renderCards(data) {
+  const grid = $('cardsGrid');
+  const tabs = $('chartTabs');
+  grid.innerHTML = '';
+  tabs.innerHTML = '';
+  Object.values(sparkCharts).forEach(c => c.destroy());
+  sparkCharts = {};
+
+  Object.entries(data.crosses).forEach(([key, cr]) => {
+    const d   = dec(key);
+    const ci  = changeInfo(cr.change_pct);
+    const rsi = cr.rsi != null ? cr.rsi.toFixed(1) : '—';
+    const trendCls = `badge-${(cr.trend||'NEUTRAL').toLowerCase()}`;
+
+    /* card */
+    const card = document.createElement('div');
+    card.className = 'card' + (key === selectedCross ? ' active' : '');
+    card.id = `card-${key}`;
+    card.onclick = () => selectCross(key);
+    card.innerHTML = `
+      <div class="card-label">${NAMES[key]||key}</div>
+      <div class="card-price">${fmt(cr.last, d)}</div>
+      <div class="card-change ${ci.cls}">${ci.arrow} ${ci.txt}</div>
+      <div class="card-ohlc">
+        <span>O&nbsp;${fmt(cr.open,d)}</span>
+        <span>H&nbsp;${fmt(cr.high,d)}</span>
+        <span>L&nbsp;${fmt(cr.low,d)}</span>
+      </div>
+      <div class="card-badges">
+        <span class="badge badge-rsi" style="color:${rsiColor(cr.rsi)};border-color:${rsiColor(cr.rsi)}55;">RSI&nbsp;${rsi}</span>
+        <span class="badge ${trendCls}">${cr.trend||'—'}</span>
+      </div>
+      <div class="spark-wrap"><canvas id="sp-${key}"></canvas></div>
+    `;
+    grid.appendChild(card);
+
+    /* tab */
+    const tab = document.createElement('button');
+    tab.className = 'tab' + (key === selectedCross ? ' active' : '');
+    tab.id = `tab-${key}`;
+    tab.textContent = NAMES[key]||key;
+    tab.onclick = () => selectCross(key);
+    tabs.appendChild(tab);
+
+    /* sparkline (defer to next tick so canvas is in DOM) */
+    requestAnimationFrame(() => drawSparkline(key, cr));
+  });
+}
+
+function drawSparkline(key, cr) {
+  const canvas = $(`sp-${key}`);
+  if (!canvas || !cr.history?.length) return;
+
+  // Dimensioni fisse dal wrapper — evita lo stretching durante il layout della griglia
+  const wrap = canvas.parentElement;
+  canvas.width  = wrap?.clientWidth  || 160;
+  canvas.height = 48;
+
+  const isUp  = (cr.change_pct ?? 0) >= 0;
+  const color = isUp ? '#00e87a' : '#ff3f5a';
+  if (sparkCharts[key]) sparkCharts[key].destroy();
+  sparkCharts[key] = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: cr.history,
+      datasets: [{ data: cr.history, borderColor: color, borderWidth: 1.5,
+        pointRadius: 0, tension: 0.3, fill: true,
+        backgroundColor: ctx => {
+          const g = ctx.chart.ctx.createLinearGradient(0,0,0,48);
+          g.addColorStop(0, color+'44'); g.addColorStop(1, color+'00'); return g;
+        }
+      }]
+    },
+    options: {
+      responsive: false,
+      animation: false,
+      plugins: { legend:{display:false}, tooltip:{enabled:false} },
+      scales: { x:{display:false}, y:{display:false} }
+    }
+  });
+}
+
+/* ── Render: strength chart ── */
+function renderStrength(strength) {
+  const sorted = Object.entries(strength).sort(([,a],[,b]) => b-a);
+  const labels = sorted.map(([k])=>k);
+  const vals   = sorted.map(([,v])=>v);
+  const colors = vals.map(v => v>60?'#00e87a': v<40?'#ff3f5a':'#00cfff');
+
+  if (strengthInst) strengthInst.destroy();
+  strengthInst = new Chart($('strengthChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data: vals,
+        backgroundColor: colors.map(c=>c+'99'),
+        borderColor: colors,
+        borderWidth: 1,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: {display:false},
+        tooltip: { callbacks:{ label: ctx=>` ${ctx.parsed.x.toFixed(1)}` } }
+      },
+      scales: {
+        x: { min:0, max:100, grid:{color:'#182048'}, ticks:{color:'#9bafd4',font:{size:10}} },
+        y: { grid:{display:false}, ticks:{color:'#d8e2f5',font:{size:12,weight:'bold'}} }
+      }
+    }
+  });
+}
+
+/* ── Render: detail chart ── */
+function renderDetail(key, cr) {
+  if (!cr?.history?.length) return;
+  const d    = dec(key);
+  const isUp = (cr.history.at(-1) ?? 0) >= (cr.history[0] ?? 0);
+  const color= isUp ? '#00e87a' : '#ff3f5a';
+  const dates= cr.history_dates ?? cr.history.map((_,i)=>i);
+
+  if (detailInst) detailInst.destroy();
+  detailInst = new Chart($('detailChart'), {
+    type: 'line',
+    data: {
+      labels: dates,
+      datasets: [{
+        label: NAMES[key]||key,
+        data:  cr.history,
+        borderColor: color, borderWidth: 2,
+        pointRadius: 0, pointHoverRadius: 4,
+        tension: 0.1, fill: true,
+        backgroundColor: ctx => {
+          const g = ctx.chart.ctx.createLinearGradient(0,0,0,250);
+          g.addColorStop(0, color+'44'); g.addColorStop(1, color+'00'); return g;
+        }
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: {intersect:false, mode:'index'},
+      plugins: {
+        legend: {display:false},
+        tooltip: {
+          backgroundColor:'#111830', borderColor:'#182048', borderWidth:1,
+          callbacks:{ label: ctx=>` ${parseFloat(ctx.parsed.y).toFixed(d)}` }
+        }
+      },
+      scales: {
+        x: {
+          grid:{color:'#18204822'},
+          ticks:{color:'#9bafd4', maxTicksLimit:8, font:{size:10},
+            callback: (_, i) => {
+              const lbl = dates[i];
+              return typeof lbl === 'string' ? lbl.slice(5) : lbl; // MM-DD
+            }
+          }
+        },
+        y: {
+          grid:{color:'#182048'},
+          ticks:{color:'#9bafd4', font:{size:10},
+            callback: v => parseFloat(v).toFixed(d)
+          }
+        }
+      }
+    }
+  });
+}
+
+/* ── Render: table ── */
+function renderTable(crosses) {
+  const body = $('tBody');
+  body.innerHTML = '';
+  Object.entries(crosses).forEach(([key, cr]) => {
+    const d  = dec(key);
+    const ci = changeInfo(cr.change_pct);
+    const trendCls = `badge-${(cr.trend||'NEUTRAL').toLowerCase()}`;
+    const rsiStyle = `color:${rsiColor(cr.rsi)}`;
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${NAMES[key]||key}</td>
+      <td>${fmt(cr.last,d)}</td>
+      <td>${fmt(cr.open,d)}</td>
+      <td>${fmt(cr.high,d)}</td>
+      <td>${fmt(cr.low,d)}</td>
+      <td class="${ci.cls}">${ci.txt}</td>
+      <td style="${rsiStyle}">${cr.rsi!=null?cr.rsi.toFixed(1):'—'}</td>
+      <td>${fmt(cr.sma20,d)}</td>
+      <td>${fmt(cr.sma50,d)}</td>
+      <td>${fmt(cr.sma200,d)}</td>
+      <td>${cr.atr!=null?parseFloat(cr.atr).toFixed(5):'—'}</td>
+      <td><span class="badge ${trendCls}">${cr.trend||'—'}</span></td>
+    `;
+    body.appendChild(row);
+  });
+}
+
+/* ── Select cross ── */
+function selectCross(key) {
+  selectedCross = key;
+  document.querySelectorAll('.card').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  const c = $(`card-${key}`); if (c) c.classList.add('active');
+  const t = $(`tab-${key}`);  if (t) t.classList.add('active');
+  if (appData?.crosses?.[key]) renderDetail(key, appData.crosses[key]);
+}
+
+/* ── Currency Strength System ── */
+const CURR_COLORS = {
+  USD:'#00d4ff', EUR:'#4466ff', GBP:'#cc44ff',
+  JPY:'#ff8800', CHF:'#ff3f5a', CAD:'#ff0066',
+  AUD:'#00e87a', NZD:'#ffd700'
+};
+
+/* ── Strength System state ── */
+let strData      = null;
+let strHistInst  = null;
+let strBtInst    = null;
+let strPeriod    = '3Y';
+let selCurr      = [];          // max 2 selezionate
+let compStrInst  = null;
+let compPriceInst = null;
+
+const CROSS_PAIRS = {
+  EURUSD:['EUR','USD'], GBPUSD:['GBP','USD'], USDJPY:['USD','JPY'],
+  USDCHF:['USD','CHF'], USDCAD:['USD','CAD'], AUDUSD:['AUD','USD'],
+  NZDUSD:['NZD','USD']
+};
+
+function findCross(c1, c2) {
+  for (const [cross, [base, quote]] of Object.entries(CROSS_PAIRS)) {
+    if (base === c1 && quote === c2) return { cross, base, quote, inverted: false };
+    if (base === c2 && quote === c1) return { cross, base, quote, inverted: true  };
+  }
+  return null;
+}
+
+function getDateCutoff(period) {
+  const now = new Date();
+  const map = { '1Y':1, '3Y':3, '5Y':5, '10Y':10 };
+  if (!map[period]) return null;
+  return new Date(now.getFullYear() - map[period], now.getMonth(), now.getDate())
+    .toISOString().slice(0, 10);
+}
+
+function sliceByPeriod(allDates, period) {
+  const cutoff = getDateCutoff(period);
+  if (!cutoff) return 0;
+  const idx = allDates.findIndex(d => d >= cutoff);
+  return idx < 0 ? 0 : idx;
+}
+
+/* ── Period selector ── */
+function setStrPeriod(p) {
+  strPeriod = p;
+  document.querySelectorAll('#strPeriodTabs .tab').forEach(t => t.classList.remove('active'));
+  const map = {'1Y':0,'3Y':1,'5Y':2,'10Y':3,'MAX':4};
+  document.querySelectorAll('#strPeriodTabs .tab')[map[p]]?.classList.add('active');
+  renderStrengthHistory();
+  if (selCurr.length === 2) renderComparison();
+}
+
+/* ── Currency pills ── */
+function renderCurrPills() {
+  const wrap = $('currPills');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  const currencies = ['USD','EUR','GBP','JPY','CHF','CAD','AUD','NZD'];
+  currencies.forEach(c => {
+    const color = CURR_COLORS[c] || '#fff';
+    const active = selCurr.includes(c);
+    const pill = document.createElement('span');
+    pill.id = `pill-${c}`;
+    pill.textContent = c;
+    pill.style.cssText = `
+      padding:5px 14px; border-radius:20px; cursor:pointer;
+      font-size:.78rem; font-weight:800; letter-spacing:.5px;
+      border:1px solid ${color}; transition:all .15s;
+      background:${active ? color : color+'22'};
+      color:${active ? '#000' : color};
+    `;
+    pill.onclick = () => toggleCurrency(c);
+    wrap.appendChild(pill);
+  });
+}
+
+function toggleCurrency(c) {
+  if (selCurr.includes(c)) {
+    selCurr = selCurr.filter(x => x !== c);
+  } else {
+    if (selCurr.length >= 2) selCurr.shift();
+    selCurr.push(c);
+  }
+  renderCurrPills();
+  if (selCurr.length === 2) {
+    renderComparison();
+  } else {
+    $('compPanel').style.display = 'none';
+    if (compStrInst)  { compStrInst.destroy();  compStrInst  = null; }
+    if (compPriceInst){ compPriceInst.destroy(); compPriceInst = null; }
+  }
+}
+
+/* ── Comparison chart ── */
+async function renderComparison() {
+  const [c1, c2] = selCurr;
+  const found = findCross(c1, c2);
+
+  $('compLabel').textContent = `${c1} / ${c2} — Forza vs Cross`;
+  $('compPanel').style.display = '';
+
+  // Forza delle 2 valute selezionate
+  const allDates = strData.dates;
+  const start    = sliceByPeriod(allDates, strPeriod);
+  const dates    = allDates.slice(start);
+  const s1       = strData.strength_history[c1]?.slice(start) ?? [];
+  const s2       = strData.strength_history[c2]?.slice(start) ?? [];
+
+  if (compStrInst) compStrInst.destroy();
+  compStrInst = new Chart($('compStrChart'), {
+    type: 'line',
+    data: {
+      labels: dates,
+      datasets: [
+        { label: c1, data: s1, borderColor: CURR_COLORS[c1]||'#fff',
+          backgroundColor:'transparent', borderWidth:2, pointRadius:0, pointHoverRadius:4, tension:.3 },
+        { label: c2, data: s2, borderColor: CURR_COLORS[c2]||'#aaa',
+          backgroundColor:'transparent', borderWidth:2, pointRadius:0, pointHoverRadius:4, tension:.3 },
+      ]
+    },
+    options: lineChartOpts(dates, 'Forza (0–100)', v => v.toFixed(0), 0, 100)
+  });
+
+  // Prezzo del cross
+  if (!found) {
+    $('compInfo').textContent = `Nessun cross diretto tra ${c1} e ${c2} nei 7 major.`;
+    if (compPriceInst) { compPriceInst.destroy(); compPriceInst = null; }
+    $('compPriceChart').getContext('2d').clearRect(0,0,9999,9999);
+    return;
+  }
+
+  const { cross, inverted } = found;
+  const label = inverted ? `${c1}/${c2} (invertito)` : `${found.base}/${found.quote}`;
+  $('compInfo').textContent = `Cross: ${label} · Finestra forza: ${strData.window_days}gg`;
+
+  try {
+    const res = await fetch(`data/cross_prices/${cross}.json?_=` + Date.now());
+    if (!res.ok) throw new Error('file non trovato');
+    const pd = await res.json();
+
+    const pStart  = sliceByPeriod(pd.dates, strPeriod);
+    const pDates  = pd.dates.slice(pStart);
+    let   prices  = pd.prices.slice(pStart);
+    const rawSigs = (pd.signals || []).slice(pStart);
+    if (inverted) prices = prices.map(v => v != null ? Math.round(1/v * 100000)/100000 : null);
+
+    const priceColor = prices.at(-1) >= prices[0] ? '#00e87a' : '#ff3f5a';
+    const priceDec   = cross === 'USDJPY' ? 3 : 5;
+
+    // Punti di ingresso: solo dove il segnale CAMBIA (nuovo ingresso)
+    const longPts  = prices.map((p,i) => rawSigs[i] ===  1 && rawSigs[i-1] !==  1 ? p : null);
+    const shortPts = prices.map((p,i) => rawSigs[i] === -1 && rawSigs[i-1] !== -1 ? p : null);
+
+    if (compPriceInst) compPriceInst.destroy();
+    compPriceInst = new Chart($('compPriceChart'), {
+      type: 'line',
+      data: {
+        labels: pDates,
+        datasets: [
+          {
+            label, data: prices,
+            borderColor: priceColor, borderWidth: 1.5,
+            backgroundColor: ctx => {
+              const g = ctx.chart.ctx.createLinearGradient(0,0,0,190);
+              g.addColorStop(0, priceColor+'44'); g.addColorStop(1, priceColor+'00'); return g;
+            },
+            fill: true, pointRadius: 0, pointHoverRadius: 4, tension: .1, order: 2,
+          },
+          {
+            label: 'LONG ▲', data: longPts,
+            type: 'scatter',
+            backgroundColor: '#00e87a', borderColor: '#00e87a',
+            pointStyle: 'triangle', pointRadius: 7, pointHoverRadius: 9,
+            rotation: 0, showLine: false, order: 1,
+          },
+          {
+            label: 'SHORT ▼', data: shortPts,
+            type: 'scatter',
+            backgroundColor: '#ff3f5a', borderColor: '#ff3f5a',
+            pointStyle: 'triangle', pointRadius: 7, pointHoverRadius: 9,
+            rotation: 180, showLine: false, order: 1,
+          },
+        ]
+      },
+      options: lineChartOpts(pDates, 'Prezzo',
+        v => parseFloat(v).toFixed(priceDec))
+    });
+  } catch(e) {
+    $('compInfo').textContent += ` · Dati prezzo non disponibili (${e.message})`;
+  }
+}
+
+/* ── Shared line chart options factory ── */
+function lineChartOpts(dates, yLabel, tickFn, yMin, yMax) {
+  return {
+    responsive: true, maintainAspectRatio: false,
+    interaction: { intersect: false, mode: 'index' },
+    plugins: {
+      legend: { labels: { color: '#d8e2f5', font: { size: 11 }, boxWidth: 18 } },
+      tooltip: {
+        backgroundColor: '#111830', borderColor: '#182048', borderWidth: 1,
+        callbacks: { label: ctx => ` ${ctx.dataset.label}: ${tickFn(ctx.parsed.y)}` }
+      }
+    },
+    scales: {
+      x: {
+        grid: { color: '#18204811' },
+        ticks: {
+          color: '#9bafd4', maxTicksLimit: 10, font: { size: 10 },
+          callback: (_, i) => { const l = dates[i]; return typeof l === 'string' ? l.slice(0,7) : l; }
+        }
+      },
+      y: {
+        ...(yMin != null ? { min: yMin } : {}),
+        ...(yMax != null ? { max: yMax } : {}),
+        grid: { color: '#182048' },
+        ticks: { color: '#9bafd4', font: { size: 10 }, callback: tickFn }
+      }
+    }
+  };
+}
+
+async function loadStrength() {
+  try {
+    const res = await fetch('data/strength_data.json?_=' + Date.now());
+    if (!res.ok) return;
+    strData = await res.json();
+    $('strMeta').textContent =
+      `Finestra: ${strData.window_days} giorni · Soglia: ±${strData.threshold} · Agg: ${strData.last_update}`;
+    renderStrengthHistory();
+    renderCurrPills();
+    renderSignals();
+    renderStrBt();
+  } catch (_) { /* strength_data.json non ancora disponibile */ }
+}
+
+function renderStrengthHistory() {
+  if (!strData?.strength_history) return;
+  const allDates = strData.dates;
+  const start    = sliceByPeriod(allDates, strPeriod);
+  const dates    = allDates.slice(start);
+  const datasets = Object.entries(strData.strength_history).map(([curr, vals]) => ({
+    label: curr,
+    data:  vals.slice(start),
+    borderColor:     CURR_COLORS[curr] || '#fff',
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    pointRadius: 0,
+    pointHoverRadius: 4,
+    tension: 0.3,
+  }));
+
+  if (strHistInst) strHistInst.destroy();
+  strHistInst = new Chart($('strHistChart'), {
+    type: 'line',
+    data: { labels: dates, datasets },
+    options: lineChartOpts(dates, 'Forza (0–100)', v => v.toFixed(0), 0, 100)
+  });
+}
+
+function renderSignals() {
+  if (!strData?.signals) return;
+  const body = $('signalsBody');
+  body.innerHTML = '';
+
+  Object.entries(strData.signals).forEach(([key, sig]) => {
+    const diffCls  = sig.signal === 'LONG' ? 'up' : sig.signal === 'SHORT' ? 'dn' : 'neu';
+    const tCls     = `badge-${sig.signal.toLowerCase()}`;
+    const bColor   = CURR_COLORS[sig.base]  || '#fff';
+    const qColor   = CURR_COLORS[sig.quote] || '#fff';
+    const leCls    = sig.last_entry_signal === 'LONG' ? 'up' : sig.last_entry_signal === 'SHORT' ? 'dn' : 'neu';
+    const leTCls   = `badge-${(sig.last_entry_signal||'neutral').toLowerCase()}`;
+
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${NAMES[key] || key}</td>
+      <td style="text-align:left; min-width:150px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="color:${bColor}; font-weight:800; width:34px;">${sig.base}</span>
+          <div style="flex:1; background:#182048; border-radius:3px; height:7px; overflow:hidden;">
+            <div style="height:100%; width:${sig.base_str}%; background:${bColor}; border-radius:3px;"></div>
+          </div>
+          <span style="font-size:.7rem; color:var(--sub); width:24px; text-align:right;">${sig.base_str.toFixed(0)}</span>
+        </div>
+      </td>
+      <td style="text-align:left; min-width:150px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="color:${qColor}; font-weight:800; width:34px;">${sig.quote}</span>
+          <div style="flex:1; background:#182048; border-radius:3px; height:7px; overflow:hidden;">
+            <div style="height:100%; width:${sig.quote_str}%; background:${qColor}; border-radius:3px;"></div>
+          </div>
+          <span style="font-size:.7rem; color:var(--sub); width:24px; text-align:right;">${sig.quote_str.toFixed(0)}</span>
+        </div>
+      </td>
+      <td class="${diffCls}" style="font-family:'Courier New'; font-weight:700;">${sig.diff >= 0 ? '+' : ''}${sig.diff.toFixed(1)}</td>
+      <td><span class="badge ${tCls}">${sig.signal}</span></td>
+      <td style="font-size:.75rem; color:var(--sub);">${sig.signal_since || '—'}</td>
+      <td>
+        <span class="badge ${leTCls}" style="margin-right:4px;">${sig.last_entry_signal || '—'}</span>
+        <span style="font-size:.7rem; color:var(--sub);">${sig.last_entry_date || '—'}</span>
+      </td>
+    `;
+    body.appendChild(row);
+  });
+}
+
+function renderStrBt() {
+  if (!strData?.backtest) return;
+  const keys    = Object.keys(strData.backtest);
+  const labels  = keys.map(k => NAMES[k] || k);
+  const returns = keys.map(k => strData.backtest[k].return_pct);
+  const bh      = keys.map(k => strData.backtest[k].buy_hold_pct);
+  const rColors = returns.map(v => v >= 0 ? '#00e87a99' : '#ff3f5a99');
+  const rBorder = returns.map(v => v >= 0 ? '#00e87a'   : '#ff3f5a');
+
+  if (strBtInst) strBtInst.destroy();
+  strBtInst = new Chart($('strBtChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Return % (Forza)', data: returns,
+          backgroundColor: rColors, borderColor: rBorder, borderWidth: 1, borderRadius: 4 },
+        { label: 'Buy & Hold %',     data: bh,
+          backgroundColor: '#00cfff33', borderColor: '#00cfff', borderWidth: 1, borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#9bafd4', font: { size: 11 } } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y.toFixed(2)}%` } }
+      },
+      scales: {
+        x: { grid: { color: '#182048' }, ticks: { color: '#d8e2f5', font: { size: 11 } } },
+        y: { grid: { color: '#182048' }, ticks: { color: '#9bafd4', font: { size: 10 }, callback: v => v + '%' } }
+      }
+    }
+  });
+
+  const body = $('strBtBody');
+  body.innerHTML = '';
+  keys.forEach(key => {
+    const s   = strData.backtest[key];
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${NAMES[key] || key}</td>
+      <td class="${s.return_pct   >= 0 ? 'up' : 'dn'}">${s.return_pct   >= 0 ? '+' : ''}${s.return_pct.toFixed(2)}%</td>
+      <td class="${s.buy_hold_pct >= 0 ? 'up' : 'dn'}">${s.buy_hold_pct >= 0 ? '+' : ''}${s.buy_hold_pct.toFixed(2)}%</td>
+      <td class="dn">${s.max_dd_pct.toFixed(2)}%</td>
+      <td>${s.n_trades}</td>
+      <td class="${s.win_rate >= 50 ? 'up' : 'dn'}">${s.win_rate.toFixed(1)}%</td>
+      <td>${s.sharpe.toFixed(2)}</td>
+    `;
+    body.appendChild(row);
+  });
+}
+
+/* ── Load data ── */
+async function loadData() {
+  $('overlay').classList.add('on');
+  try {
+    const res = await fetch(DATA_URL + '?_=' + Date.now());
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    appData = data;
+
+    $('lastUpdate').textContent = `Agg: ${data.last_update}`;
+    $('errBanner').style.display = 'none';
+    $('liveDot').style.background = 'var(--green)';
+
+    renderCards(data);
+    renderStrength(data.strength);
+    renderDetail(selectedCross, data.crosses[selectedCross] ?? Object.values(data.crosses)[0]);
+    renderTable(data.crosses);
+    loadStrength();
+
+  } catch (e) {
+    const b = $('errBanner');
+    b.style.display = 'block';
+    b.textContent   = `⚠ Errore caricamento: ${e.message} — eseguire prima data_updater.py`;
+    $('liveDot').style.background = 'var(--red)';
+  } finally {
+    $('overlay').classList.remove('on');
+  }
+}
+
+/* ── Refresh button ── */
+async function refresh() {
+  const btn = $('btnRefresh');
+  const ico = $('refreshIco');
+  if (btn.classList.contains('loading')) return;
+  btn.classList.add('loading');
+  ico.className = 'spin';
+  ico.textContent = '';
+  await loadData();
+  btn.classList.remove('loading');
+  ico.className = '';
+  ico.textContent = '↻';
+}
+
+/* ── Init ── */
+loadData();
+setInterval(loadData, AUTO_REFRESH_MS);
+</script>
+</body>
+</html>
