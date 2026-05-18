@@ -16,6 +16,7 @@ env/
 
 # CSV (dati locali pesanti, vengono rigenerati da data_updater.py)
 data/*.csv
+data/**/*.csv
 
 # File di log e temporanei
 *.log
