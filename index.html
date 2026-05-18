@@ -883,7 +883,8 @@ async function renderComparison() {
     $('threshShort').value =  (strData.threshold ?? 15);
     $('threshLong').value  = -(strData.threshold ?? 15);
 
-    compLoadedData = { prices, diff, pDates, priceColor, priceDec, label };
+    const rawSigs = (pd.signals || []).slice(pStart);
+    compLoadedData = { prices, diff, pDates, priceColor, priceDec, label, rawSigs };
 
     if (compPriceInst) { compPriceInst.destroy(); compPriceInst = null; }
     updateCompChart();
@@ -902,13 +903,12 @@ function updateCompChart() {
   const longT  = parseFloat($('threshLong').value);
   const { prices, diff, pDates, priceColor, priceDec, label } = compLoadedData;
 
-  // Ricalcola segnali con le soglie scelte
-  const sigs = diff.map(d => {
-    if (d === null) return 0;
-    if (d > shortT) return -1;   // SHORT contrarian
-    if (d < longT)  return  1;   // LONG contrarian
-    return 0;
-  });
+  // Ricalcola segnali con le soglie scelte (fallback ai segnali pre-calcolati se diff mancante)
+  const hasDiff = diff.length === prices.length;
+  const rawSigsPrecomp = compLoadedData.rawSigs || [];
+  const sigs = hasDiff
+    ? diff.map(d => { if (d===null) return 0; if (d>shortT) return -1; if (d<longT) return 1; return 0; })
+    : rawSigsPrecomp;
 
   const longPts  = prices.map((p,i) => sigs[i] ===  1 && (i===0||sigs[i-1]!== 1)  ? p : null);
   const shortPts = prices.map((p,i) => sigs[i] === -1 && (i===0||sigs[i-1]!== -1) ? p : null);
