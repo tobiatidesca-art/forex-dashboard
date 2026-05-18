@@ -401,15 +401,34 @@
         <canvas id="compStrChart"></canvas>
       </div>
       <div style="height:1px; background:var(--card-b); margin-bottom:14px;"></div>
-      <!-- Prezzo storico del cross corrispondente -->
-      <div style="position:relative; height:190px;">
+      <!-- Filtro soglie segnali -->
+      <div style="display:flex; gap:20px; align-items:center; flex-wrap:wrap; margin-bottom:12px;">
+        <span style="font-size:.72rem; color:var(--sub);">Filtro segnali:</span>
+        <label style="font-size:.72rem; color:#ff3f5a; display:flex; align-items:center; gap:6px;">
+          SHORT se diff &gt;
+          <input type="number" id="threshShort" value="15" step="1"
+            style="width:68px; background:#111830; border:1px solid #182048; border-radius:6px;
+                   color:#ff3f5a; padding:3px 8px; font-size:.72rem; outline:none;"
+            oninput="onThreshChange()">
+        </label>
+        <label style="font-size:.72rem; color:#00e87a; display:flex; align-items:center; gap:6px;">
+          LONG se diff &lt;
+          <input type="number" id="threshLong" value="-15" step="1"
+            style="width:68px; background:#111830; border:1px solid #182048; border-radius:6px;
+                   color:#00e87a; padding:3px 8px; font-size:.72rem; outline:none;"
+            oninput="onThreshChange()">
+        </label>
+        <span style="font-size:.72rem; color:#ffc107;" id="eqSummary"></span>
+      </div>
+      <!-- Prezzo storico del cross + equity -->
+      <div style="position:relative; height:220px;">
         <canvas id="compPriceChart"></canvas>
       </div>
     </div>
   </div>
 
   <!-- ── Signals ── -->
-  <div class="section-label">Segnali operativi · soglia ±15 punti</div>
+  <div class="section-label" id="signalsLabel">Segnali operativi · soglia ±15 punti</div>
   <div class="table-panel">
     <table>
       <thead>
@@ -720,8 +739,9 @@ let strHistInst  = null;
 let strBtInst    = null;
 let strPeriod    = '3Y';
 let selCurr      = [];          // max 2 selezionate
-let compStrInst  = null;
+let compStrInst   = null;
 let compPriceInst = null;
+let compLoadedData = null;
 
 const CROSS_PAIRS = {
   EURUSD:['EUR','USD'], GBPUSD:['GBP','USD'], USDJPY:['USD','JPY'],
@@ -850,56 +870,145 @@ async function renderComparison() {
     if (!res.ok) throw new Error('file non trovato');
     const pd = await res.json();
 
-    const pStart  = sliceByPeriod(pd.dates, strPeriod);
-    const pDates  = pd.dates.slice(pStart);
-    let   prices  = pd.prices.slice(pStart);
-    const rawSigs = (pd.signals || []).slice(pStart);
+    const pStart = sliceByPeriod(pd.dates, strPeriod);
+    const pDates = pd.dates.slice(pStart);
+    let   prices = pd.prices.slice(pStart);
+    const diff   = (pd.diff || []).slice(pStart);
     if (inverted) prices = prices.map(v => v != null ? Math.round(1/v * 100000)/100000 : null);
 
     const priceColor = prices.at(-1) >= prices[0] ? '#00e87a' : '#ff3f5a';
     const priceDec   = cross === 'USDJPY' ? 3 : 5;
 
-    // Punti di ingresso: solo dove il segnale CAMBIA (nuovo ingresso)
-    const longPts  = prices.map((p,i) => rawSigs[i] ===  1 && rawSigs[i-1] !==  1 ? p : null);
-    const shortPts = prices.map((p,i) => rawSigs[i] === -1 && rawSigs[i-1] !== -1 ? p : null);
+    // Imposta soglie default dal threshold del dataset
+    $('threshShort').value =  (strData.threshold ?? 15);
+    $('threshLong').value  = -(strData.threshold ?? 15);
 
-    if (compPriceInst) compPriceInst.destroy();
-    compPriceInst = new Chart($('compPriceChart'), {
-      type: 'line',
-      data: {
-        labels: pDates,
-        datasets: [
-          {
-            label, data: prices,
-            borderColor: priceColor, borderWidth: 1.5,
-            backgroundColor: ctx => {
-              const g = ctx.chart.ctx.createLinearGradient(0,0,0,190);
-              g.addColorStop(0, priceColor+'44'); g.addColorStop(1, priceColor+'00'); return g;
-            },
-            fill: true, pointRadius: 0, pointHoverRadius: 4, tension: .1, order: 2,
-          },
-          {
-            label: 'LONG ▲', data: longPts,
-            type: 'scatter',
-            backgroundColor: '#00e87a', borderColor: '#00e87a',
-            pointStyle: 'triangle', pointRadius: 7, pointHoverRadius: 9,
-            rotation: 0, showLine: false, order: 1,
-          },
-          {
-            label: 'SHORT ▼', data: shortPts,
-            type: 'scatter',
-            backgroundColor: '#ff3f5a', borderColor: '#ff3f5a',
-            pointStyle: 'triangle', pointRadius: 7, pointHoverRadius: 9,
-            rotation: 180, showLine: false, order: 1,
-          },
-        ]
-      },
-      options: lineChartOpts(pDates, 'Prezzo',
-        v => parseFloat(v).toFixed(priceDec))
-    });
+    compLoadedData = { prices, diff, pDates, priceColor, priceDec, label };
+
+    if (compPriceInst) { compPriceInst.destroy(); compPriceInst = null; }
+    updateCompChart();
   } catch(e) {
     $('compInfo').textContent += ` · Dati prezzo non disponibili (${e.message})`;
   }
+}
+
+function onThreshChange() {
+  if (compLoadedData) updateCompChart();
+  renderSignals();
+}
+
+function updateCompChart() {
+  const shortT = parseFloat($('threshShort').value);
+  const longT  = parseFloat($('threshLong').value);
+  const { prices, diff, pDates, priceColor, priceDec, label } = compLoadedData;
+
+  // Ricalcola segnali con le soglie scelte
+  const sigs = diff.map(d => {
+    if (d === null) return 0;
+    if (d > shortT) return -1;   // SHORT contrarian
+    if (d < longT)  return  1;   // LONG contrarian
+    return 0;
+  });
+
+  const longPts  = prices.map((p,i) => sigs[i] ===  1 && (i===0||sigs[i-1]!== 1)  ? p : null);
+  const shortPts = prices.map((p,i) => sigs[i] === -1 && (i===0||sigs[i-1]!== -1) ? p : null);
+
+  // Equity cumulativa (shift 1: segnale di ieri → posizione di oggi)
+  const equity = [100];
+  for (let i = 1; i < prices.length; i++) {
+    const ret = (prices[i] != null && prices[i-1] != null)
+      ? (prices[i] - prices[i-1]) / prices[i-1] : 0;
+    equity.push(equity.at(-1) * (1 + ret * sigs[i-1]));
+  }
+
+  const eqFinal = equity.at(-1) ?? 100;
+  const eqPct   = eqFinal - 100;
+  $('eqSummary').textContent =
+    `Equity finale: ${eqFinal.toFixed(1)}  (${eqPct >= 0 ? '+' : ''}${eqPct.toFixed(1)}%)`;
+
+  // Se il grafico esiste già aggiorna solo i dataset (più veloce)
+  if (compPriceInst) {
+    compPriceInst.data.datasets[1].data = equity;
+    compPriceInst.data.datasets[2].data = longPts;
+    compPriceInst.data.datasets[3].data = shortPts;
+    compPriceInst.update('none');
+    return;
+  }
+
+  // Prima creazione del grafico
+  compPriceInst = new Chart($('compPriceChart'), {
+    type: 'line',
+    data: {
+      labels: pDates,
+      datasets: [
+        {
+          label, data: prices, yAxisID: 'yPrice',
+          borderColor: priceColor, borderWidth: 1.5,
+          backgroundColor: ctx => {
+            const g = ctx.chart.ctx.createLinearGradient(0,0,0,220);
+            g.addColorStop(0, priceColor+'44'); g.addColorStop(1, priceColor+'00'); return g;
+          },
+          fill: true, pointRadius: 0, pointHoverRadius: 4, tension: .1, order: 2,
+        },
+        {
+          label: 'Equity', data: equity, yAxisID: 'yEquity',
+          borderColor: '#ffc107', borderWidth: 1.5, backgroundColor: 'transparent',
+          pointRadius: 0, pointHoverRadius: 4, tension: .1, order: 3,
+        },
+        {
+          label: 'LONG ▲', data: longPts, yAxisID: 'yPrice', type: 'scatter',
+          backgroundColor: '#00e87a', borderColor: '#00e87a',
+          pointStyle: 'triangle', pointRadius: 7, pointHoverRadius: 9,
+          rotation: 0, showLine: false, order: 1,
+        },
+        {
+          label: 'SHORT ▼', data: shortPts, yAxisID: 'yPrice', type: 'scatter',
+          backgroundColor: '#ff3f5a', borderColor: '#ff3f5a',
+          pointStyle: 'triangle', pointRadius: 7, pointHoverRadius: 9,
+          rotation: 180, showLine: false, order: 1,
+        },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { intersect: false, mode: 'index' },
+      plugins: {
+        legend: { labels: { color: '#d8e2f5', font: { size: 11 }, boxWidth: 18 } },
+        tooltip: {
+          backgroundColor: '#111830', borderColor: '#182048', borderWidth: 1,
+          callbacks: {
+            label: ctx => {
+              if (ctx.dataset.label === 'Equity')
+                return ` Equity: ${parseFloat(ctx.parsed.y).toFixed(1)}`;
+              if (ctx.dataset.yAxisID === 'yPrice' && ctx.parsed.y != null)
+                return ` ${ctx.dataset.label}: ${parseFloat(ctx.parsed.y).toFixed(priceDec)}`;
+              return null;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: '#18204811' },
+          ticks: { color: '#9bafd4', maxTicksLimit: 10, font: { size: 10 },
+            callback: (_, i) => { const l = pDates[i]; return typeof l==='string' ? l.slice(0,7) : l; }
+          }
+        },
+        yPrice: {
+          type: 'linear', position: 'right',
+          grid: { color: '#18204822' },
+          ticks: { color: '#9bafd4', font: { size: 10 },
+            callback: v => parseFloat(v).toFixed(priceDec) }
+        },
+        yEquity: {
+          type: 'linear', position: 'left',
+          grid: { color: '#18204811' },
+          ticks: { color: '#ffc107', font: { size: 10 },
+            callback: v => v.toFixed(0) }
+        }
+      }
+    }
+  });
 }
 
 /* ── Shared line chart options factory ── */
@@ -972,16 +1081,55 @@ function renderStrengthHistory() {
 
 function renderSignals() {
   if (!strData?.signals) return;
+
+  const shortT = parseFloat($('threshShort')?.value ?? strData.threshold ?? 15);
+  const longT  = parseFloat($('threshLong')?.value  ?? -(strData.threshold ?? 15));
+
+  // Aggiorna label sezione con soglie correnti
+  $('signalsLabel').textContent =
+    `Segnali operativi · SHORT se diff > ${shortT}  ·  LONG se diff < ${longT}`;
+
+  const dates = strData.dates || [];
+
   const body = $('signalsBody');
   body.innerHTML = '';
 
   Object.entries(strData.signals).forEach(([key, sig]) => {
-    const diffCls  = sig.signal === 'LONG' ? 'up' : sig.signal === 'SHORT' ? 'dn' : 'neu';
-    const tCls     = `badge-${sig.signal.toLowerCase()}`;
-    const bColor   = CURR_COLORS[sig.base]  || '#fff';
-    const qColor   = CURR_COLORS[sig.quote] || '#fff';
-    const leCls    = sig.last_entry_signal === 'LONG' ? 'up' : sig.last_entry_signal === 'SHORT' ? 'dn' : 'neu';
-    const leTCls   = `badge-${(sig.last_entry_signal||'neutral').toLowerCase()}`;
+    // Ricalcola segnale e date usando soglie correnti
+    let signal = sig.signal;
+    let signal_since = sig.signal_since;
+    let last_entry_signal = sig.last_entry_signal;
+    let last_entry_date   = sig.last_entry_date;
+
+    const bArr = strData.strength_history?.[sig.base];
+    const qArr = strData.strength_history?.[sig.quote];
+    if (bArr && qArr && bArr.length === dates.length) {
+      const sigFn = d => d > shortT ? 'SHORT' : d < longT ? 'LONG' : 'NEUTRAL';
+      const ss = bArr.map((b, i) => sigFn(b - qArr[i]));
+
+      signal = ss.at(-1);
+
+      // signal_since: ultima transizione verso il segnale corrente
+      signal_since = null;
+      for (let i = ss.length - 1; i >= 1; i--) {
+        if (ss[i] === signal && ss[i-1] !== signal) { signal_since = dates[i]; break; }
+      }
+
+      // last_entry: ultima transizione verso un segnale non-NEUTRAL
+      last_entry_date = null; last_entry_signal = 'NEUTRAL';
+      for (let i = ss.length - 1; i >= 1; i--) {
+        if (ss[i] !== 'NEUTRAL' && ss[i-1] !== ss[i]) {
+          last_entry_date = dates[i]; last_entry_signal = ss[i]; break;
+        }
+      }
+    }
+
+    const diffCls = signal === 'LONG' ? 'up' : signal === 'SHORT' ? 'dn' : 'neu';
+    const tCls    = `badge-${signal.toLowerCase()}`;
+    const bColor  = CURR_COLORS[sig.base]  || '#fff';
+    const qColor  = CURR_COLORS[sig.quote] || '#fff';
+    const leCls   = last_entry_signal === 'LONG' ? 'up' : last_entry_signal === 'SHORT' ? 'dn' : 'neu';
+    const leTCls  = `badge-${(last_entry_signal||'neutral').toLowerCase()}`;
 
     const row = document.createElement('tr');
     row.innerHTML = `
@@ -1005,11 +1153,11 @@ function renderSignals() {
         </div>
       </td>
       <td class="${diffCls}" style="font-family:'Courier New'; font-weight:700;">${sig.diff >= 0 ? '+' : ''}${sig.diff.toFixed(1)}</td>
-      <td><span class="badge ${tCls}">${sig.signal}</span></td>
-      <td style="font-size:.75rem; color:var(--sub);">${sig.signal_since || '—'}</td>
+      <td><span class="badge ${tCls}">${signal}</span></td>
+      <td style="font-size:.75rem; color:var(--sub);">${signal_since || '—'}</td>
       <td>
-        <span class="badge ${leTCls}" style="margin-right:4px;">${sig.last_entry_signal || '—'}</span>
-        <span style="font-size:.7rem; color:var(--sub);">${sig.last_entry_date || '—'}</span>
+        <span class="badge ${leTCls}" style="margin-right:4px;">${last_entry_signal || '—'}</span>
+        <span style="font-size:.7rem; color:var(--sub);">${last_entry_date || '—'}</span>
       </td>
     `;
     body.appendChild(row);
