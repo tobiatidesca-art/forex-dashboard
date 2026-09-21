@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-09-18 10:49 UTC",
+  "last_update": "2026-09-21 12:21 UTC",
   "window_days": 10,
   "threshold": 15.0,
   "dates": [
@@ -5261,7 +5261,9 @@
     "2026-09-14",
     "2026-09-15",
     "2026-09-16",
-    "2026-09-17"
+    "2026-09-17",
+    "2026-09-18",
+    "2026-09-21"
   ],
   "strength_history": {
     "USD": [
@@ -10523,7 +10525,9 @@
       27.03,
       46.83,
       48.45,
-      75.27
+      75.27,
+      100.0,
+      100.0
     ],
     "EUR": [
       52.96,
@@ -15784,7 +15788,9 @@
       31.08,
       31.67,
       35.26,
-      30.58
+      30.58,
+      32.85,
+      38.78
     ],
     "GBP": [
       43.31,
@@ -21045,7 +21051,9 @@
       28.57,
       35.68,
       38.69,
-      36.72
+      36.72,
+      33.45,
+      42.66
     ],
     "JPY": [
       0.0,
@@ -26306,7 +26314,9 @@
       100.0,
       100.0,
       100.0,
-      100.0
+      100.0,
+      57.11,
+      48.25
     ],
     "CHF": [
       42.42,
@@ -31567,7 +31577,9 @@
       14.3,
       22.92,
       27.88,
-      17.79
+      17.79,
+      12.6,
+      28.42
     ],
     "CAD": [
       66.52,
@@ -36828,7 +36840,9 @@
       34.21,
       35.88,
       40.41,
-      29.64
+      29.64,
+      29.32,
+      33.87
     ],
     "AUD": [
       34.26,
@@ -42089,7 +42103,9 @@
       27.81,
       33.47,
       38.83,
-      29.18
+      29.18,
+      35.69,
+      42.53
     ],
     "NZD": [
       100.0,
@@ -47350,6 +47366,8 @@
       0.0,
       0.0,
       0.0,
+      0.0,
+      0.0,
       0.0
     ]
   },
@@ -47358,136 +47376,136 @@
       "base": "NZD",
       "quote": "USD",
       "base_str": 0.0,
-      "quote_str": 75.3,
-      "diff": -75.3,
+      "quote_str": 100.0,
+      "diff": -100.0,
       "signal": "LONG",
-      "last_entry_date": "2026-09-17",
+      "last_entry_date": "2026-09-21",
       "last_entry_signal": "LONG",
       "signal_since": "2026-09-03"
     },
     "USDCHF": {
       "base": "USD",
       "quote": "CHF",
-      "base_str": 75.3,
-      "quote_str": 17.8,
-      "diff": 57.5,
+      "base_str": 100.0,
+      "quote_str": 28.4,
+      "diff": 71.6,
       "signal": "SHORT",
-      "last_entry_date": "2026-09-17",
+      "last_entry_date": "2026-09-21",
       "last_entry_signal": "SHORT",
       "signal_since": "2026-09-15"
-    },
-    "AUDUSD": {
-      "base": "AUD",
-      "quote": "USD",
-      "base_str": 29.2,
-      "quote_str": 75.3,
-      "diff": -46.1,
-      "signal": "LONG",
-      "last_entry_date": "2026-09-17",
-      "last_entry_signal": "LONG",
-      "signal_since": "2026-09-17"
     },
     "USDCAD": {
       "base": "USD",
       "quote": "CAD",
-      "base_str": 75.3,
-      "quote_str": 29.6,
-      "diff": 45.6,
+      "base_str": 100.0,
+      "quote_str": 33.9,
+      "diff": 66.1,
       "signal": "SHORT",
-      "last_entry_date": "2026-09-17",
+      "last_entry_date": "2026-09-21",
       "last_entry_signal": "SHORT",
       "signal_since": "2026-09-17"
     },
     "EURUSD": {
       "base": "EUR",
       "quote": "USD",
-      "base_str": 30.6,
-      "quote_str": 75.3,
-      "diff": -44.7,
+      "base_str": 38.8,
+      "quote_str": 100.0,
+      "diff": -61.2,
       "signal": "LONG",
-      "last_entry_date": "2026-09-17",
+      "last_entry_date": "2026-09-21",
+      "last_entry_signal": "LONG",
+      "signal_since": "2026-09-17"
+    },
+    "AUDUSD": {
+      "base": "AUD",
+      "quote": "USD",
+      "base_str": 42.5,
+      "quote_str": 100.0,
+      "diff": -57.5,
+      "signal": "LONG",
+      "last_entry_date": "2026-09-21",
       "last_entry_signal": "LONG",
       "signal_since": "2026-09-17"
     },
     "GBPUSD": {
       "base": "GBP",
       "quote": "USD",
-      "base_str": 36.7,
-      "quote_str": 75.3,
-      "diff": -38.5,
+      "base_str": 42.7,
+      "quote_str": 100.0,
+      "diff": -57.3,
       "signal": "LONG",
-      "last_entry_date": "2026-09-17",
+      "last_entry_date": "2026-09-21",
       "last_entry_signal": "LONG",
       "signal_since": "2026-09-17"
     },
     "USDJPY": {
       "base": "USD",
       "quote": "JPY",
-      "base_str": 75.3,
-      "quote_str": 100.0,
-      "diff": -24.7,
-      "signal": "LONG",
-      "last_entry_date": "2026-09-17",
-      "last_entry_signal": "LONG",
-      "signal_since": "2026-09-04"
+      "base_str": 100.0,
+      "quote_str": 48.2,
+      "diff": 51.8,
+      "signal": "SHORT",
+      "last_entry_date": "2026-09-21",
+      "last_entry_signal": "SHORT",
+      "signal_since": "2026-09-18"
     }
   },
   "backtest": {
     "EURUSD": {
-      "return_pct": 69.09,
-      "buy_hold_pct": -10.84,
+      "return_pct": 69.43,
+      "buy_hold_pct": -10.67,
       "max_dd_pct": -27.67,
       "sharpe": 0.29,
       "n_trades": 1262,
       "win_rate": 51.5
     },
     "GBPUSD": {
-      "return_pct": 5.07,
-      "buy_hold_pct": -28.88,
+      "return_pct": 5.17,
+      "buy_hold_pct": -28.81,
       "max_dd_pct": -25.33,
       "sharpe": 0.07,
       "n_trades": 1209,
       "win_rate": 50.5
     },
     "USDJPY": {
-      "return_pct": 37.0,
-      "buy_hold_pct": 39.11,
+      "return_pct": 36.1,
+      "buy_hold_pct": 40.24,
       "max_dd_pct": -34.94,
       "sharpe": 0.19,
-      "n_trades": 1254,
+      "n_trades": 1255,
       "win_rate": 50.1
     },
     "USDCHF": {
-      "return_pct": 36.94,
-      "buy_hold_pct": -31.9,
+      "return_pct": 37.57,
+      "buy_hold_pct": -32.21,
       "max_dd_pct": -26.07,
-      "sharpe": 0.2,
+      "sharpe": 0.21,
       "n_trades": 1219,
       "win_rate": 50.4
     },
     "USDCAD": {
-      "return_pct": 32.06,
-      "buy_hold_pct": 27.26,
+      "return_pct": 31.92,
+      "buy_hold_pct": 27.39,
       "max_dd_pct": -25.75,
       "sharpe": 0.21,
       "n_trades": 1219,
-      "win_rate": 50.5
+      "win_rate": 50.4
     },
     "AUDUSD": {
-      "return_pct": 25.15,
-      "buy_hold_pct": -6.95,
+      "return_pct": 26.09,
+      "buy_hold_pct": -6.26,
       "max_dd_pct": -36.02,
       "sharpe": 0.15,
       "n_trades": 1170,
       "win_rate": 50.9
     },
     "NZDUSD": {
-      "return_pct": -35.75,
-      "buy_hold_pct": -10.56,
+      "return_pct": -35.57,
+      "buy_hold_pct": -10.3,
       "max_dd_pct": -49.9,
       "sharpe": -0.13,
       "n_trades": 1105,
-      "win_rate": 49.9
+      "win_rate": 50.0
     }
   }
 }
