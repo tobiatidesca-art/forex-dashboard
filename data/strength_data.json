@@ -1,5 +1,5 @@
 {
-  "last_update": "2026-10-05 14:00 UTC",
+  "last_update": "2026-10-06 13:00 UTC",
   "window_days": 10,
   "threshold": 15.0,
   "dates": [
@@ -5272,7 +5272,9 @@
     "2026-09-29",
     "2026-09-30",
     "2026-10-01",
-    "2026-10-02"
+    "2026-10-02",
+    "2026-10-05",
+    "2026-10-06"
   ],
   "strength_history": {
     "USD": [
@@ -10535,6 +10537,8 @@
       46.83,
       48.45,
       75.27,
+      100.0,
+      100.0,
       100.0,
       100.0,
       100.0,
@@ -15817,7 +15821,9 @@
       12.39,
       5.82,
       22.6,
-      15.34
+      15.34,
+      10.99,
+      3.73
     ],
     "GBP": [
       43.31,
@@ -21089,7 +21095,9 @@
       4.43,
       3.64,
       33.17,
-      33.75
+      33.75,
+      33.68,
+      36.43
     ],
     "JPY": [
       0.0,
@@ -26361,7 +26369,9 @@
       1.78,
       14.7,
       30.11,
-      34.56
+      34.56,
+      50.59,
+      44.28
     ],
     "CHF": [
       42.42,
@@ -31633,7 +31643,9 @@
       5.41,
       1.92,
       22.33,
-      45.51
+      45.51,
+      44.79,
+      20.91
     ],
     "CAD": [
       66.52,
@@ -36905,7 +36917,9 @@
       0.0,
       0.04,
       7.08,
-      23.0
+      23.0,
+      13.72,
+      12.71
     ],
     "AUD": [
       34.26,
@@ -42176,6 +42190,8 @@
       15.54,
       7.72,
       0.15,
+      0.0,
+      0.0,
       0.0,
       0.0
     ],
@@ -47449,7 +47465,9 @@
       0.1,
       0.0,
       15.38,
-      9.82
+      9.82,
+      13.97,
+      8.96
     ]
   },
   "signals": {
@@ -47460,51 +47478,62 @@
       "quote_str": 100.0,
       "diff": -100.0,
       "signal": "LONG",
-      "last_entry_date": "2026-10-02",
+      "last_entry_date": "2026-10-06",
+      "last_entry_signal": "LONG",
+      "signal_since": "2026-09-17"
+    },
+    "EURUSD": {
+      "base": "EUR",
+      "quote": "USD",
+      "base_str": 3.7,
+      "quote_str": 100.0,
+      "diff": -96.3,
+      "signal": "LONG",
+      "last_entry_date": "2026-10-06",
       "last_entry_signal": "LONG",
       "signal_since": "2026-09-17"
     },
     "NZDUSD": {
       "base": "NZD",
       "quote": "USD",
-      "base_str": 9.8,
+      "base_str": 9.0,
       "quote_str": 100.0,
-      "diff": -90.2,
+      "diff": -91.0,
       "signal": "LONG",
-      "last_entry_date": "2026-10-02",
+      "last_entry_date": "2026-10-06",
       "last_entry_signal": "LONG",
       "signal_since": "2026-09-03"
-    },
-    "EURUSD": {
-      "base": "EUR",
-      "quote": "USD",
-      "base_str": 15.3,
-      "quote_str": 100.0,
-      "diff": -84.7,
-      "signal": "LONG",
-      "last_entry_date": "2026-10-02",
-      "last_entry_signal": "LONG",
-      "signal_since": "2026-09-17"
     },
     "USDCAD": {
       "base": "USD",
       "quote": "CAD",
       "base_str": 100.0,
-      "quote_str": 23.0,
-      "diff": 77.0,
+      "quote_str": 12.7,
+      "diff": 87.3,
       "signal": "SHORT",
-      "last_entry_date": "2026-10-02",
+      "last_entry_date": "2026-10-06",
       "last_entry_signal": "SHORT",
       "signal_since": "2026-09-17"
+    },
+    "USDCHF": {
+      "base": "USD",
+      "quote": "CHF",
+      "base_str": 100.0,
+      "quote_str": 20.9,
+      "diff": 79.1,
+      "signal": "SHORT",
+      "last_entry_date": "2026-10-06",
+      "last_entry_signal": "SHORT",
+      "signal_since": "2026-09-15"
     },
     "GBPUSD": {
       "base": "GBP",
       "quote": "USD",
-      "base_str": 33.8,
+      "base_str": 36.4,
       "quote_str": 100.0,
-      "diff": -66.2,
+      "diff": -63.6,
       "signal": "LONG",
-      "last_entry_date": "2026-10-02",
+      "last_entry_date": "2026-10-06",
       "last_entry_signal": "LONG",
       "signal_since": "2026-09-17"
     },
@@ -47512,79 +47541,68 @@
       "base": "USD",
       "quote": "JPY",
       "base_str": 100.0,
-      "quote_str": 34.6,
-      "diff": 65.4,
+      "quote_str": 44.3,
+      "diff": 55.7,
       "signal": "SHORT",
-      "last_entry_date": "2026-10-02",
+      "last_entry_date": "2026-10-06",
       "last_entry_signal": "SHORT",
       "signal_since": "2026-09-18"
-    },
-    "USDCHF": {
-      "base": "USD",
-      "quote": "CHF",
-      "base_str": 100.0,
-      "quote_str": 45.5,
-      "diff": 54.5,
-      "signal": "SHORT",
-      "last_entry_date": "2026-10-02",
-      "last_entry_signal": "SHORT",
-      "signal_since": "2026-09-15"
     }
   },
   "backtest": {
     "EURUSD": {
-      "return_pct": 65.84,
-      "buy_hold_pct": -12.55,
+      "return_pct": 66.01,
+      "buy_hold_pct": -12.47,
       "max_dd_pct": -27.67,
       "sharpe": 0.28,
       "n_trades": 1262,
       "win_rate": 51.4
     },
     "GBPUSD": {
-      "return_pct": 3.63,
-      "buy_hold_pct": -29.85,
+      "return_pct": 4.22,
+      "buy_hold_pct": -29.46,
       "max_dd_pct": -25.33,
-      "sharpe": 0.06,
+      "sharpe": 0.07,
       "n_trades": 1209,
       "win_rate": 50.5
     },
     "USDJPY": {
-      "return_pct": 35.52,
-      "buy_hold_pct": 40.82,
+      "return_pct": 35.36,
+      "buy_hold_pct": 40.99,
       "max_dd_pct": -34.94,
       "sharpe": 0.19,
       "n_trades": 1255,
       "win_rate": 50.1
     },
     "USDCHF": {
-      "return_pct": 36.06,
-      "buy_hold_pct": -31.47,
+      "return_pct": 36.01,
+      "buy_hold_pct": -31.44,
       "max_dd_pct": -26.07,
       "sharpe": 0.2,
       "n_trades": 1219,
       "win_rate": 50.3
     },
     "USDCAD": {
-      "return_pct": 29.9,
-      "buy_hold_pct": 29.37,
+      "return_pct": 29.7,
+      "buy_hold_pct": 29.56,
       "max_dd_pct": -25.75,
       "sharpe": 0.2,
       "n_trades": 1219,
       "win_rate": 50.4
     },
     "AUDUSD": {
-      "return_pct": 22.34,
-      "buy_hold_pct": -9.05,
+      "return_pct": 23.32,
+      "buy_hold_pct": -8.32,
       "max_dd_pct": -36.02,
       "sharpe": 0.14,
       "n_trades": 1170,
       "win_rate": 50.9
     },
     "NZDUSD": {
-      "return_pct": -37.08,
-      "buy_hold_pct": -12.4,
+      "return_pct": -36.88,
+      "buy_hold_pct": -12.12,
       "max_dd_pct": -49.9,
-      "sharpe": -0.14,
+      "sharpe": -0.13,
       "n_trades": 1105,
       "win_rate": 49.9
     }
